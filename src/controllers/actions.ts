@@ -296,8 +296,8 @@ export const controllers: {
     return app.exec(
       "wallet",
       "getAccountInfo",
-      message.payload?.accountName,
-      message.payload?.id
+      message.payload && message.payload.accountName,
+      message.payload && message.payload.id
     );
   },
 
@@ -305,8 +305,8 @@ export const controllers: {
     return app.exec(
       "wallet",
       "getAccountKey",
-      message.payload?.accountName,
-      message.payload?.id
+      message.payload && message.payload.accountName,
+      message.payload && message.payload.id
     );
   },
 
@@ -379,8 +379,8 @@ export const controllers: {
     return app.exec(
       "wallet",
       "getPendingTransactions",
-      message.payload?.id,
-      message.payload?.shouldBroadcast
+      message.payload && message.payload.id,
+      message.payload && message.payload.shouldBroadcast
     );
   },
 

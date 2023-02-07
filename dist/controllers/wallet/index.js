@@ -39,7 +39,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //   setWalletBalance,
 // } from '@src/ui/ducks/wallet';
 // import pushMessage from '@src/util/pushMessage';
-// import { GenericService } from '@src/util/svc';
 const crypto = require("crypto");
 const Mnemonic = require("hsd/lib/hd/mnemonic");
 const WalletDB = require("hsd/lib/wallet/walletdb");
@@ -62,15 +61,17 @@ const DB = require("bdb/lib/DB");
 const layout = require("hsd/lib/wallet/layout").txdb;
 const { Resource } = require("hsd/lib/dns/resource");
 const blake2b = require("bcrypto/lib/blake2b");
-const { WalletClient } = require("hs-client");
 const svc_1 = require("../../util/svc");
 const bid_reveal_1 = require("./bid-reveal");
 const blind_bid_1 = require("./blind-bid");
+const db_1 = require("../../util/db");
 const number_1 = require("../../util/number");
 const transaction_1 = require("../../util/transaction");
 const node_1 = require("../node");
 const { types, typesByVal } = rules;
 const networkType = process.env.NETWORK_TYPE || "main";
+const SIGN_MESSAGE_METHOD = "SIGN_MESSAGE";
+const SIGN_MESSAGE_WITH_NAME_METHOD = "SIGN_MESSAGE_WITH_NAME";
 const LOOKAHEAD = 100;
 const ONE_MINUTE = 60000;
 const MAGIC_STRING = `handshake signed message:\n`;
@@ -501,37 +502,12 @@ class WalletService extends svc_1.GenericService {
             return blind.toString("hex");
         });
         this.createWallet = (options) => __awaiter(this, void 0, void 0, function* () {
-            // // await this.exec('setting', 'setAnalytics', options.optIn);
-            // const wallet = await this.wdb.create(options);
-            // const balance = await wallet.getBalance();
-            // await this.selectWallet(options.id);
-            // await this.unlockWallet(options.passphrase);
-            // return wallet.getJSON(false, balance);
-            // const network = Network.get("regtest");
-            // const client = new WalletClient({
-            //   network: network,
-            //   port: network.walletPort,
-            //   apiKey: "api-key",
-            //   timeout: 10000,
-            // });
-            // const createOptions = {
-            //   passphrase: "wahtever",
-            //   watchOnly: false,
-            // };
-            // const res = await client.createWallet('test', createOptions);
-            yield this.start();
-            // const mnemonic = new Mnemonic({ bits: 256 });
-            // const testOpts = {
-            //   id: "test",
-            //   passphrase: "password",
-            //   mnemonic,
-            //   watchOnly: false,
-            // };
-            // const wallet = await this.wdb.create(testOpts);
-            // const balance = await wallet.getBalance();
-            // await this.selectWallet(options.id);
-            // await this.unlockWallet(options.passphrase);
-            // console.log("balance:", wallet.getJSON(false, balance));
+            yield this.exec("setting", "setAnalytics", options.optIn);
+            const wallet = yield this.wdb.create(options);
+            const balance = yield wallet.getBalance();
+            yield this.selectWallet(options.id);
+            yield this.unlockWallet(options.passphrase);
+            return wallet.getJSON(false, balance);
         });
         this.createWalletAccount = (accountName) => __awaiter(this, void 0, void 0, function* () {
             const wallet = yield this.wdb.get(this.selectedID);
@@ -915,7 +891,7 @@ class WalletService extends svc_1.GenericService {
             return createdTx.toJSON();
         });
         this.updateTxFromQueue = (opts) => __awaiter(this, void 0, void 0, function* () {
-            let txQueue = (yield get(this.store, `tx_queue_${this.selectedID}`)) || [];
+            let txQueue = (yield db_1.get(this.store, `tx_queue_${this.selectedID}`)) || [];
             txQueue = txQueue.map((tx) => {
                 if (tx.hash === opts.oldJSON.hash) {
                     return opts.txJSON;
@@ -924,26 +900,26 @@ class WalletService extends svc_1.GenericService {
                     return tx;
                 }
             });
-            yield put(this.store, `tx_queue_${this.selectedID}`, txQueue);
+            yield db_1.put(this.store, `tx_queue_${this.selectedID}`, txQueue);
             yield this.updateTxQueue();
         });
         this.addTxToQueue = (txJSON) => __awaiter(this, void 0, void 0, function* () {
-            const txQueue = (yield get(this.store, `tx_queue_${this.selectedID}`)) || [];
+            const txQueue = (yield db_1.get(this.store, `tx_queue_${this.selectedID}`)) || [];
             if (!txQueue.filter((tx) => tx.hash === txJSON.hash)[0]) {
                 txQueue.push(txJSON);
             }
-            yield put(this.store, `tx_queue_${this.selectedID}`, txQueue);
+            yield db_1.put(this.store, `tx_queue_${this.selectedID}`, txQueue);
             yield this.updateTxQueue();
         });
         this.removeTxFromQueue = (txJSON) => __awaiter(this, void 0, void 0, function* () {
-            let txQueue = (yield get(this.store, `tx_queue_${this.selectedID}`)) || [];
+            let txQueue = (yield db_1.get(this.store, `tx_queue_${this.selectedID}`)) || [];
             txQueue = txQueue.filter((tx) => tx.hash !== txJSON.hash);
-            yield put(this.store, `tx_queue_${this.selectedID}`, txQueue);
+            yield db_1.put(this.store, `tx_queue_${this.selectedID}`, txQueue);
             yield this.updateTxQueue();
         });
         this.getTxQueue = (id) => __awaiter(this, void 0, void 0, function* () {
             const walletId = id || this.selectedID;
-            const txQueue = (yield get(this.store, `tx_queue_${walletId}`)) || [];
+            const txQueue = (yield db_1.get(this.store, `tx_queue_${walletId}`)) || [];
             yield this._addOutputPathToTxQueue(txQueue);
             return txQueue;
         });
@@ -989,7 +965,7 @@ class WalletService extends svc_1.GenericService {
         });
         this.updateTxQueue = () => __awaiter(this, void 0, void 0, function* () {
             if (this.selectedID) {
-                const txQueue = yield get(this.store, `tx_queue_${this.selectedID}`);
+                const txQueue = yield db_1.get(this.store, `tx_queue_${this.selectedID}`);
                 yield this._addOutputPathToTxQueue(txQueue);
                 yield pushMessage({
                     type: QueueActionType.SET_TX_QUEUE,
@@ -1196,7 +1172,7 @@ class WalletService extends svc_1.GenericService {
             const transactions = receiveTXs.concat(changeTXs);
             yield this.wdb.watch();
             yield this.insertTransactions(transactions);
-            yield put(this.store, `latest_block_${this.selectedID}`, latestBlockEnd);
+            yield db_1.put(this.store, `latest_block_${this.selectedID}`, latestBlockEnd);
             this.rescanning = false;
             this.pushState();
             yield this.pushBobMessage("");
@@ -1232,7 +1208,7 @@ class WalletService extends svc_1.GenericService {
                     yield unlock();
                 }
             }
-            yield put(this.store, `latest_block_${this.selectedID}`, {
+            yield db_1.put(this.store, `latest_block_${this.selectedID}`, {
                 hash: entryOption.hash,
                 height: entryOption.height,
                 time: entryOption.time,
@@ -1256,7 +1232,7 @@ class WalletService extends svc_1.GenericService {
             yield this.pushState();
             yield this.pushBobMessage("Checking status...");
             const latestBlockNow = yield this.exec("node", "getLatestBlock");
-            const latestBlockLast = yield get(this.store, `latest_block_${this.selectedID}`);
+            const latestBlockLast = yield db_1.get(this.store, `latest_block_${this.selectedID}`);
             try {
                 if (latestBlockLast && latestBlockLast.height >= latestBlockNow.height) {
                     yield this.pushBobMessage("I am synchronized.");
@@ -1384,26 +1360,25 @@ class WalletService extends svc_1.GenericService {
     start() {
         return __awaiter(this, void 0, void 0, function* () {
             this.network = Network.get(networkType);
-            // this.wdb = new WalletDB({
-            //   network: this.network,
-            //   memory: false,
-            //   location:
-            //     this.network.type === "main"
-            //       ? "/walletdb"
-            //       : `/${this.network}/walletdb`,
-            //   cacheSize: 512 << 20,
-            //   maxFileSize: 256 << 20,
-            // });
-            // this.store = bdb.create("/wallet-store");
-            // this.wdb.on("error", (err: Error) => console.error("wdb error", err));
-            // await this.wdb.open();
-            // await this.store.open();
-            // if (!this.selectedID) {
-            //   const walletIDs = await this.getWalletIDs();
-            //   this.selectedID = walletIDs.filter((id) => id !== "primary")[0];
-            // }
-            // this.checkForRescan();
-            // this.pollerTimeout = this.initPoller();
+            this.wdb = new WalletDB({
+                network: this.network,
+                memory: false,
+                location: this.network.type === "main"
+                    ? "/walletdb"
+                    : `/${this.network}/walletdb`,
+                cacheSize: 512 << 20,
+                maxFileSize: 256 << 20,
+            });
+            this.store = bdb.create("/wallet-store");
+            this.wdb.on("error", (err) => console.error("wdb error", err));
+            yield this.wdb.open();
+            yield this.store.open();
+            if (!this.selectedID) {
+                const walletIDs = yield this.getWalletIDs();
+                this.selectedID = walletIDs.filter((id) => id !== "primary")[0];
+            }
+            this.checkForRescan();
+            this.pollerTimeout = this.initPoller();
         });
     }
     stop() {

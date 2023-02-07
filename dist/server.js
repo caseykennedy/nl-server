@@ -30,8 +30,10 @@ app.use(errorHandler());
  * Initialize routing.
  */
 routes_1.initRoutes(app);
+// test generic route
 // app.use(router);
-app.set("appService", background_1.getAppService());
+// singleton service
+app.set("appService", background_1.initServices());
 /**
  * Start Express server.
  */
