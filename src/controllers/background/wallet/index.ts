@@ -43,14 +43,14 @@ const layout = require("hsd/lib/wallet/layout").txdb;
 const { Resource } = require("hsd/lib/dns/resource");
 const blake2b = require("bcrypto/lib/blake2b");
 
-import { GenericService } from "../../util/svc";
+import { GenericService } from "../../../util/svc";
 import BidReveal from "./bid-reveal";
 import BlindBid from "./blind-bid";
-import { SignMessageRequest, Transaction } from "../../types";
-import { UpdateRecordType } from "../../types";
-import { get, put } from "../../util/db";
-import { toDollaryDoos } from "../../util/number";
-import { getBidBlind, getTXAction } from "../../util/transaction";
+import { SignMessageRequest, Transaction } from "../../../types";
+import { UpdateRecordType } from "../../../types";
+import { get, put } from "../../../util/db";
+import { toDollaryDoos } from "../../../util/number";
+import { getBidBlind, getTXAction } from "../../../util/transaction";
 import nodeService from "../node";
 
 const { types, typesByVal } = rules;

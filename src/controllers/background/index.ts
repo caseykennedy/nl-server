@@ -1,5 +1,5 @@
 import WalletService from "./wallet";
-import { AppService } from "../util/svc";
+import { AppService } from "../../util/svc";
 
 import NodeService from "./node";
 // import AnalyticsService from "./analytics";

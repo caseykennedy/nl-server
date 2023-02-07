@@ -1,4 +1,4 @@
-import { GenericService } from "../util/svc";
+import { GenericService } from "../../util/svc";
 const fetch = require("node-fetch");
 const rules = require("hsd/lib/covenants/rules");
 const { states, statesByVal } = require("hsd/lib/covenants/namestate");
