@@ -6,6 +6,7 @@ import * as expressValidator from "express-validator";
 import * as logger from "morgan";
 
 import { initRoutes } from "./controllers/routes";
+import router from "./routes/routes";
 import { initServices } from "./controllers/background";
 
 /**
@@ -32,9 +33,9 @@ app.use(errorHandler());
 /**
  * Initialize routing.
  */
-initRoutes(app);
+// initRoutes(app);
 // test generic route
-// app.use(router);
+app.use(router);
 
 // singleton service
 app.set("appService", initServices());

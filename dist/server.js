@@ -6,7 +6,7 @@ const errorHandler = require("errorhandler");
 const express = require("express");
 const expressValidator = require("express-validator");
 const logger = require("morgan");
-const routes_1 = require("./controllers/routes");
+const routes_1 = require("./routes/routes");
 const background_1 = require("./controllers/background");
 /**
  * Create Express server.
@@ -29,9 +29,9 @@ app.use(errorHandler());
 /**
  * Initialize routing.
  */
-routes_1.initRoutes(app);
+// initRoutes(app);
 // test generic route
-// app.use(router);
+app.use(routes_1.default);
 // singleton service
 app.set("appService", background_1.initServices());
 /**
