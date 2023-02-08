@@ -1,8 +1,6 @@
 import { AppService } from "../util/svc";
-
 import { MessageAction } from "../api/base";
 import { controllers } from "./actions";
-
 import { initServices } from "./background";
 
 export async function messageListener(message: MessageAction): Promise<string> {

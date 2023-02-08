@@ -1,4 +1,7 @@
 import { GenericService } from "../../util/svc";
+const bdb = require("bdb");
+const DB = require("bdb/lib/db");
+import { get, put } from "../../util/db";
 const fetch = require("node-fetch");
 const rules = require("hsd/lib/covenants/rules");
 const { states, statesByVal } = require("hsd/lib/covenants/namestate");
@@ -9,14 +12,11 @@ const NAME_CACHE: string[] = [];
 const NAME_MAP: { [hash: string]: string } = {};
 
 export default class NodeService extends GenericService {
-  // store: typeof DB;
+  store: typeof DB;
   network: typeof Network;
 
   async getHeaders(): Promise<any> {
     const { apiHost, apiKey } = await this.exec("setting", "getAPI");
-
-    // const apiHost = "https://api.handshakeapi.com/hsd";
-    // const apiKey = "";
 
     return {
       "Content-Type": "application/json",
@@ -85,20 +85,20 @@ export default class NodeService extends GenericService {
   }
 
   async getBlockByHeight(blockHeight: number) {
-    // const cachedEntry = await get(this.store, `blockdata-${blockHeight}`);
-    // if (cachedEntry) return cachedEntry;
+    const cachedEntry = await get(this.store, `blockdata-${blockHeight}`);
+    if (cachedEntry) return cachedEntry;
 
     const headers = await this.getHeaders();
     const block = await this.fetchWrapper(`block/${blockHeight}`, {
       method: "GET",
       headers: headers,
     });
-    // await put(this.store, `blockdata-${blockHeight}`, block);
+    await put(this.store, `blockdata-${blockHeight}`, block);
     return block;
   }
 
   async addNameHash(name: string, hash: string) {
-    // return put(this.store, `namehash-${hash}`, { result: name });
+    return put(this.store, `namehash-${hash}`, { result: name });
   }
 
   async hashName(name: string) {
@@ -108,8 +108,8 @@ export default class NodeService extends GenericService {
   async getNameByHash(hash: string) {
     if (NAME_MAP[hash]) return NAME_MAP[hash];
 
-    // const cachedEntry = await get(this.store, `namehash-${hash}`);
-    // if (cachedEntry) return cachedEntry;
+    const cachedEntry = await get(this.store, `namehash-${hash}`);
+    if (cachedEntry) return cachedEntry;
 
     const headers = await this.getHeaders();
     const name = await this.fetchWrapper(null, {
@@ -121,7 +121,7 @@ export default class NodeService extends GenericService {
       }),
     });
 
-    // await put(this.store, `namehash-${hash}`, name);
+    await put(this.store, `namehash-${hash}`, name);
     NAME_CACHE.push(hash);
     NAME_MAP[hash] = name;
     if (NAME_CACHE.length > 50000) {
@@ -220,8 +220,8 @@ export default class NodeService extends GenericService {
   }
 
   async getBlockEntry(height: number) {
-    // const cachedEntry = await get(this.store, `entry-${height}`);
-    // if (cachedEntry) return cachedEntry;
+    const cachedEntry = await get(this.store, `entry-${height}`);
+    if (cachedEntry) return cachedEntry;
 
     const headers = await this.getHeaders();
 
@@ -230,7 +230,7 @@ export default class NodeService extends GenericService {
       headers: headers,
     });
 
-    // await put(this.store, `entry-${height}`, blockEntry);
+    await put(this.store, `entry-${height}`, blockEntry);
 
     return blockEntry;
   }
@@ -277,8 +277,8 @@ export default class NodeService extends GenericService {
   }
 
   async start() {
-    // this.store = bdb.create("/node-store");
-    // await this.store.open();
+    this.store = bdb.create("node-store");
+    await this.store.open();
     this.network = Network.get(networkType);
   }
 
