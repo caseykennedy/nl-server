@@ -10,10 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const actions_1 = require("./actions");
 const background_1 = require("./background");
-const app = background_1.initServices();
 function messageListener(message) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield app.start();
+        const app = background_1.initServices();
         const res = handleMessage(app, message);
         //   console.log("message received:", message);
         return new Promise((resolve) => resolve(res));

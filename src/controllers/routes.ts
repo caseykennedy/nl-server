@@ -45,7 +45,7 @@ function hostApi(
           handler = (api as any)[key];
           checker = checkers[key];
         }
-
+        
         const checkResult: string = checker(body, queryParameters);
         if (checkResult) {
           res.status(HTTPStatus.BadRequest);

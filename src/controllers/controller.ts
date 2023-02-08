@@ -5,10 +5,8 @@ import { controllers } from "./actions";
 
 import { initServices } from "./background";
 
-const app = initServices();
-
 export async function messageListener(message: MessageAction): Promise<string> {
-  await app.start();
+  const app = initServices();
   const res = handleMessage(app, message);
   //   console.log("message received:", message);
   return new Promise((resolve) => resolve(res));
