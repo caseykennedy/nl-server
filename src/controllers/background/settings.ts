@@ -12,12 +12,12 @@ const DEFAULT_HOST =
   process.env.DEFAULT_HOST || "https://api.handshakeapi.com/hsd";
 const DEFAULT_API_KEY = process.env.DEFAULT_API_KEY || "";
 
-declare interface SettingService {
+declare interface SettingsService {
   apiHost: string;
   apiKey: string;
 }
 
-class SettingService extends GenericService {
+class SettingsService extends GenericService {
   store: typeof DB;
 
   constructor() {
@@ -82,4 +82,4 @@ class SettingService extends GenericService {
   async stop() {}
 }
 
-export default SettingService
+export default SettingsService
