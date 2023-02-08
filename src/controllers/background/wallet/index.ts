@@ -38,7 +38,7 @@ const Outpoint = require("hsd/lib/primitives/outpoint");
 const MasterKey = require("hsd/lib/wallet/masterkey");
 const BN = require("bcrypto/lib/bn.js");
 const bdb = require("bdb");
-const DB = require("bdb/lib/DB");
+const DB = require("bdb/lib/db");
 const layout = require("hsd/lib/wallet/layout").txdb;
 const { Resource } = require("hsd/lib/dns/resource");
 const blake2b = require("bcrypto/lib/blake2b");
@@ -1835,12 +1835,12 @@ class WalletService extends GenericService {
       memory: false,
       location:
         this.network.type === "main"
-          ? "/walletdb"
-          : `/${this.network}/walletdb`,
+          ? "walletdb"
+          : `${this.network}/walletdb`,
       cacheSize: 512 << 20,
       maxFileSize: 256 << 20,
     });
-    this.store = bdb.create("/wallet-store");
+    this.store = bdb.create("wallet-store");
 
     this.wdb.on("error", (err: Error) => console.error("wdb error", err));
     await this.wdb.open();

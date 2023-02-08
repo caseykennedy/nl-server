@@ -36,6 +36,7 @@ function hostApi(app, prefix, api, checkers) {
                     handler = api[key];
                     checker = checkers[key];
                 }
+                console.log(body, queryParameters);
                 const checkResult = checker(body, queryParameters);
                 if (checkResult) {
                     res.status(base_1.HTTPStatus.BadRequest);
